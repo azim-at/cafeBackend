@@ -1,0 +1,197 @@
+// schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  owner
+  customer
+}
+
+enum OrderStatus {
+  new
+  preparing
+  ready
+  out_for_delivery
+  delivered
+  completed
+  cancelled
+}
+
+enum OrderType {
+  dine_in
+  takeaway
+  delivery
+}
+
+model User {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  email        String   @unique
+  passwordHash String?  @map("password_hash")
+  role         UserRole @default(customer)
+  address      String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  orders         Order[]
+  favorites      Favorite[]
+  rewardsAccount RewardsAccount?
+  rewardTxns     RewardTransaction[]
+
+  @@map("users")
+}
+
+model MenuCategory {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  sortOrder Int    @default(0) @map("sort_order")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  items MenuItem[]
+
+  @@map("menu_categories")
+}
+
+model MenuItem {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  categoryId  String  @map("category_id") @db.ObjectId
+  price       Decimal @db.Decimal128
+  rating      Float?
+  popular     Boolean @default(false)
+  isActive    Boolean @default(true) @map("is_active")
+  imageUrl    String? @map("image_url")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  category   MenuCategory @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
+  favorites  Favorite[]
+
+  @@index([categoryId])
+  @@map("menu_items")
+}
+
+model Order {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  // If you want ORD-... instead, store it separately:
+  // code           String       @unique
+
+  userId          String? @map("user_id") @db.ObjectId
+  guestEmail      String? @map("guest_email")
+  guestPhone      String? @map("guest_phone")
+  deliveryAddress String? @map("delivery_address")
+
+  status OrderStatus @default(new)
+  type   OrderType
+
+  subtotal    Decimal  @db.Decimal128
+  deliveryFee Decimal? @map("delivery_fee") @db.Decimal128
+  total       Decimal  @db.Decimal128
+
+  estimatedReadyAt DateTime? @map("estimated_ready_at")
+  cancelledReason  String?   @map("cancelled_reason")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user       User?               @relation(fields: [userId], references: [id])
+  items      OrderItem[]
+  guestToken GuestOrderToken?
+  rewardTxns RewardTransaction[]
+
+  @@index([userId])
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String @id @default(auto()) @map("_id") @db.ObjectId
+  orderId    String @map("order_id") @db.ObjectId
+  menuItemId String @map("menu_item_id") @db.ObjectId
+
+  nameSnapshot  String  @map("name_snapshot")
+  priceSnapshot Decimal @map("price_snapshot") @db.Decimal128
+  quantity      Int
+  notes         String?
+
+  // Relations
+  order    Order    @relation(fields: [orderId], references: [id])
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+
+  @@index([orderId])
+  @@index([menuItemId])
+  @@map("order_items")
+}
+
+model GuestOrderToken {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId   String   @unique @map("order_id") @db.ObjectId
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("guest_order_tokens")
+}
+
+model RewardsAccount {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String   @unique @map("user_id") @db.ObjectId
+  pointsBalance Int      @default(0) @map("points_balance")
+  level         String   @default("bronze")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("rewards_accounts")
+}
+
+model RewardTransaction {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @map("user_id") @db.ObjectId
+  pointsDelta Int      @map("points_delta")
+  reason      String
+  orderId     String?  @map("order_id") @db.ObjectId
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user  User   @relation(fields: [userId], references: [id])
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@index([userId])
+  @@index([orderId])
+  @@map("reward_transactions")
+}
+
+model Favorite {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @map("user_id") @db.ObjectId
+  menuItemId String   @map("menu_item_id") @db.ObjectId
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user     User     @relation(fields: [userId], references: [id])
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+
+  @@unique([userId, menuItemId])
+  @@index([menuItemId])
+  @@map("favorites")
+}
