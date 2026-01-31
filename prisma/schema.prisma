@@ -68,7 +68,7 @@ model MenuItem {
   name        String
   description String?
   categoryId  String  @map("category_id") @db.ObjectId
-  price       Decimal @db.Decimal128
+  price       Int
   rating      Float?
   popular     Boolean @default(false)
   isActive    Boolean @default(true) @map("is_active")
@@ -99,10 +99,9 @@ model Order {
   status OrderStatus @default(new)
   type   OrderType
 
-  subtotal    Decimal  @db.Decimal128
-  deliveryFee Decimal? @map("delivery_fee") @db.Decimal128
-  total       Decimal  @db.Decimal128
-
+  subtotal         Int
+  deliveryFee      Int?      @map("delivery_fee")
+  total            Int
   estimatedReadyAt DateTime? @map("estimated_ready_at")
   cancelledReason  String?   @map("cancelled_reason")
 
@@ -125,7 +124,7 @@ model OrderItem {
   menuItemId String @map("menu_item_id") @db.ObjectId
 
   nameSnapshot  String  @map("name_snapshot")
-  priceSnapshot Decimal @map("price_snapshot") @db.Decimal128
+  priceSnapshot Int     @map("price_snapshot")
   quantity      Int
   notes         String?
 
