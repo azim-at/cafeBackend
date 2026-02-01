@@ -5,6 +5,7 @@ import menuRouter from "./routes/menu";
 import ordersRouter from "./routes/orders";
 import favoritesRouter from "./routes/favorites";
 import rewardsRouter from "./routes/rewards";
+import { isServiceError } from "./utils/errors";
 
 const app = express();
 
@@ -27,6 +28,11 @@ app.use((_req, res) => {
 });
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  if (isServiceError(err)) {
+    res.status(err.status).json({ message: err.message });
+    return;
+  }
+
   console.error("Unhandled error:", err);
   res.status(500).json({ message: "Internal server error" });
 });
