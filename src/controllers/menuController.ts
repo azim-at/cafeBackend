@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { badRequest } from "../utils/errors";
-import { parseBoolean, parseIntValue } from "../utils/parsers";
+import { parseBoolean, parseIntValue, parseString } from "../utils/parsers";
 import {
   createCategory,
   createItem,
@@ -45,7 +45,10 @@ export const createMenuCategory = asyncHandler(
 
 export const updateMenuCategory = asyncHandler(
   async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = parseString(req.params.id);
+    if (!id) {
+      throw badRequest("Invalid category id");
+    }
     const name =
       typeof req.body.name === "string" ? req.body.name.trim() : undefined;
     const sortOrderInput = req.body.sortOrder;
@@ -71,7 +74,10 @@ export const updateMenuCategory = asyncHandler(
 
 export const deleteMenuCategory = asyncHandler(
   async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = parseString(req.params.id);
+    if (!id) {
+      throw badRequest("Invalid category id");
+    }
     await deleteCategory(id);
     res.status(200).json({ success: true });
   }
@@ -79,10 +85,7 @@ export const deleteMenuCategory = asyncHandler(
 
 export const listMenuItems = asyncHandler(
   async (req: Request, res: Response) => {
-    const categoryId =
-      typeof req.query.categoryId === "string"
-        ? req.query.categoryId.trim()
-        : undefined;
+    const categoryId = parseString(req.query.categoryId) ?? undefined;
     const includeInactive = parseBoolean(req.query.includeInactive) ?? false;
     const includeCategory = parseBoolean(req.query.includeCategory) ?? false;
 
@@ -98,7 +101,10 @@ export const listMenuItems = asyncHandler(
 
 export const getMenuItem = asyncHandler(
   async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = parseString(req.params.id);
+    if (!id) {
+      throw badRequest("Invalid item id");
+    }
     const item = await getItem(id);
     res.status(200).json({ item });
   }
@@ -152,7 +158,10 @@ export const createMenuItem = asyncHandler(
 
 export const updateMenuItem = asyncHandler(
   async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = parseString(req.params.id);
+    if (!id) {
+      throw badRequest("Invalid item id");
+    }
     const updates: Record<string, unknown> = {};
 
     if (typeof req.body.name === "string") {
@@ -229,7 +238,10 @@ export const updateMenuItem = asyncHandler(
 
 export const deleteMenuItem = asyncHandler(
   async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = parseString(req.params.id);
+    if (!id) {
+      throw badRequest("Invalid item id");
+    }
     await deleteItem(id);
     res.status(200).json({ success: true });
   }

@@ -94,10 +94,8 @@ export const createGuestUserOrder = asyncHandler(
 
 export const listUserOrders = asyncHandler(
   async (req: Request, res: Response) => {
-    const status =
-      typeof req.query.status === "string" ? req.query.status : undefined;
-    const userIdQuery =
-      typeof req.query.userId === "string" ? req.query.userId : undefined;
+    const status = parseString(req.query.status) ?? undefined;
+    const userIdQuery = parseString(req.query.userId) ?? undefined;
 
     if (status && !ORDER_STATUSES_SET.has(status)) {
       throw badRequest("Invalid status");
@@ -116,7 +114,10 @@ export const listUserOrders = asyncHandler(
 
 export const getUserOrder = asyncHandler(
   async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = parseString(req.params.id);
+    if (!id) {
+      throw badRequest("Invalid order id");
+    }
     const order = await getOrder({
       id,
       userId: req.user!.id,
@@ -133,7 +134,10 @@ export const updateOrderStatusHandler = asyncHandler(
       throw forbidden("Forbidden");
     }
 
-    const { id } = req.params;
+    const id = parseString(req.params.id);
+    if (!id) {
+      throw badRequest("Invalid order id");
+    }
     const status = parseString(req.body.status);
     const estimatedReadyAtRaw = req.body.estimatedReadyAt;
     const estimatedReadyAt =
@@ -170,7 +174,10 @@ export const updateOrderStatusHandler = asyncHandler(
 
 export const createGuestTokenHandler = asyncHandler(
   async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = parseString(req.params.id);
+    if (!id) {
+      throw badRequest("Invalid order id");
+    }
     const expiresInHours = parseIntValue(req.body.expiresInHours) ?? 24;
 
     const result = await createGuestToken({
@@ -186,7 +193,10 @@ export const createGuestTokenHandler = asyncHandler(
 
 export const getGuestOrder = asyncHandler(
   async (req: Request, res: Response) => {
-    const { token } = req.params;
+    const token = parseString(req.params.token);
+    if (!token) {
+      throw badRequest("Invalid token");
+    }
     const order = await getOrderByGuestToken(token);
     res.status(200).json({ order });
   }

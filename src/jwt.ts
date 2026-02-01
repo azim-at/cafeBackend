@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import jwt, { type SignOptions } from "jsonwebtoken";
 import type { AuthUser } from "./types/auth";
 
 type JwtPayload = {
@@ -16,8 +16,9 @@ const getJwtSecret = (): string => {
   return secret;
 };
 
-const getJwtExpiresIn = (): string => {
-  return process.env.JWT_EXPIRES_IN || "7d";
+const getJwtExpiresIn = (): SignOptions["expiresIn"] => {
+  const value = process.env.JWT_EXPIRES_IN;
+  return (value ?? "7d") as SignOptions["expiresIn"];
 };
 
 export const signAuthToken = (user: AuthUser): string => {

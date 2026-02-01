@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { badRequest } from "../utils/errors";
+import { parseString } from "../utils/parsers";
 import {
   createFavorite,
   listFavorites,
@@ -41,7 +42,10 @@ export const createUserFavorite = asyncHandler(
 
 export const deleteUserFavorite = asyncHandler(
   async (req: Request, res: Response) => {
-    const { menuItemId } = req.params;
+    const menuItemId = parseString(req.params.menuItemId);
+    if (!menuItemId) {
+      throw badRequest("menuItemId is required");
+    }
     await removeFavorite({ userId: req.user!.id, menuItemId });
     res.status(200).json({ success: true });
   }
