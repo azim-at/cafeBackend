@@ -13,7 +13,7 @@ import {
 import { requireAuth } from "../middleware/requireAuth";
 import { requireOwner } from "../middleware/requireOwner";
 
-const router = Router();
+const router = Router({ mergeParams: true });
 
 router.get("/categories", listMenuCategories);
 router.post("/categories", requireAuth, requireOwner, createMenuCategory);

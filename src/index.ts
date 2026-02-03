@@ -5,6 +5,8 @@ import menuRouter from "./routes/menu";
 import ordersRouter from "./routes/orders";
 import favoritesRouter from "./routes/favorites";
 import rewardsRouter from "./routes/rewards";
+import adminRouter from "./routes/admin";
+import { resolveCafe } from "./middleware/resolveCafe";
 import { isServiceError } from "./utils/errors";
 
 const app = express();
@@ -18,10 +20,11 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRouter);
-app.use("/api/menu", menuRouter);
-app.use("/api/orders", ordersRouter);
-app.use("/api/favorites", favoritesRouter);
-app.use("/api/rewards", rewardsRouter);
+app.use("/api/:cafeSlug/menu", resolveCafe, menuRouter);
+app.use("/api/:cafeSlug/orders", resolveCafe, ordersRouter);
+app.use("/api/:cafeSlug/favorites", resolveCafe, favoritesRouter);
+app.use("/api/:cafeSlug/rewards", resolveCafe, rewardsRouter);
+app.use("/api/:cafeSlug/admin", resolveCafe, adminRouter);
 
 app.use((_req, res) => {
   res.status(404).json({ message: "Not found" });

@@ -10,14 +10,14 @@ import {
 } from "../controllers/ordersController";
 import { requireAuth } from "../middleware/requireAuth";
 
-const router = Router();
+const router = Router({ mergeParams: true });
 
 router.post("/", requireAuth, createUserOrder);
 router.post("/guest", createGuestUserOrder);
 router.get("/", requireAuth, listUserOrders);
+router.get("/guest/:token", getGuestOrder);
 router.get("/:id", requireAuth, getUserOrder);
 router.patch("/:id/status", requireAuth, updateOrderStatusHandler);
 router.post("/:id/guest-token", requireAuth, createGuestTokenHandler);
-router.get("/guest/:token", getGuestOrder);
 
 export default router;

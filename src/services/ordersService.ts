@@ -9,14 +9,14 @@ type OrderItemInput = {
   notes?: string;
 };
 
-const buildOrderItems = async (items: OrderItemInput[]) => {
+const buildOrderItems = async (cafeId: string, items: OrderItemInput[]) => {
   if (!items.length) {
     throw badRequest("Type and items are required");
   }
 
   const menuItemIds = items.map((item) => item.menuItemId);
   const menuItems = await prisma.menuItem.findMany({
-    where: { id: { in: menuItemIds }, isActive: true },
+    where: { id: { in: menuItemIds }, isActive: true, cafeId },
     select: { id: true, name: true, price: true },
   });
 
@@ -31,6 +31,7 @@ const buildOrderItems = async (items: OrderItemInput[]) => {
       throw badRequest("Invalid menu items");
     }
     return {
+      cafeId,
       menuItemId: item.menuItemId,
       nameSnapshot: menuItem.name,
       priceSnapshot: menuItem.price,
@@ -48,11 +49,13 @@ const buildOrderItems = async (items: OrderItemInput[]) => {
 };
 
 export const createOrder = async ({
+  cafeId,
   userId,
   type,
   deliveryAddress,
   items,
 }: {
+  cafeId: string;
   userId: string;
   type: string;
   deliveryAddress?: string | null;
@@ -66,12 +69,13 @@ export const createOrder = async ({
     throw badRequest("Delivery address is required");
   }
 
-  const { orderItemsData, subtotal } = await buildOrderItems(items);
+  const { orderItemsData, subtotal } = await buildOrderItems(cafeId, items);
   const deliveryFee = 0;
   const total = subtotal + deliveryFee;
 
   return prisma.order.create({
     data: {
+      cafeId,
       userId,
       type: type as any,
       deliveryAddress: deliveryAddress ?? undefined,
@@ -85,12 +89,14 @@ export const createOrder = async ({
 };
 
 export const createGuestOrder = async ({
+  cafeId,
   type,
   deliveryAddress,
   guestEmail,
   guestPhone,
   items,
 }: {
+  cafeId: string;
   type: string;
   deliveryAddress?: string | null;
   guestEmail?: string | null;
@@ -109,12 +115,13 @@ export const createGuestOrder = async ({
     throw badRequest("Delivery address is required");
   }
 
-  const { orderItemsData, subtotal } = await buildOrderItems(items);
+  const { orderItemsData, subtotal } = await buildOrderItems(cafeId, items);
   const deliveryFee = 0;
   const total = subtotal + deliveryFee;
 
   const order = await prisma.order.create({
     data: {
+      cafeId,
       type: type as any,
       guestEmail: guestEmail ?? undefined,
       guestPhone: guestPhone ?? undefined,
@@ -130,18 +137,20 @@ export const createGuestOrder = async ({
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
   const token = crypto.randomBytes(32).toString("hex");
   await prisma.guestOrderToken.create({
-    data: { orderId: order.id, token, expiresAt },
+    data: { cafeId, orderId: order.id, token, expiresAt },
   });
 
   return { order, token, expiresAt };
 };
 
 export const listOrders = async ({
+  cafeId,
   userId,
   role,
   status,
   userIdQuery,
 }: {
+  cafeId: string;
   userId: string;
   role?: "owner" | "customer" | null;
   status?: string;
@@ -154,10 +163,12 @@ export const listOrders = async ({
   const where =
     role === "owner"
       ? {
+          cafeId,
           ...(status ? { status: status as any } : {}),
           ...(userIdQuery ? { userId: userIdQuery } : {}),
         }
       : {
+          cafeId,
           userId,
           ...(status ? { status: status as any } : {}),
         };
@@ -170,16 +181,18 @@ export const listOrders = async ({
 };
 
 export const getOrder = async ({
+  cafeId,
   id,
   userId,
   role,
 }: {
+  cafeId: string;
   id: string;
   userId: string;
   role?: "owner" | "customer" | null;
 }) => {
-  const order = await prisma.order.findUnique({
-    where: { id },
+  const order = await prisma.order.findFirst({
+    where: { id, cafeId },
     include: { items: true },
   });
 
@@ -195,6 +208,7 @@ export const getOrder = async ({
 };
 
 export const updateOrderStatus = async ({
+  cafeId,
   id,
   status,
   estimatedReadyAt,
@@ -202,6 +216,7 @@ export const updateOrderStatus = async ({
   deliveryFee,
   role,
 }: {
+  cafeId: string;
   id: string;
   status: string;
   estimatedReadyAt?: Date;
@@ -217,7 +232,7 @@ export const updateOrderStatus = async ({
     throw badRequest("Invalid status");
   }
 
-  const existing = await prisma.order.findUnique({ where: { id } });
+  const existing = await prisma.order.findFirst({ where: { id, cafeId } });
   if (!existing) {
     throw notFound("Order not found");
   }
@@ -241,17 +256,19 @@ export const updateOrderStatus = async ({
 };
 
 export const createGuestToken = async ({
+  cafeId,
   id,
   userId,
   role,
   expiresInHours,
 }: {
+  cafeId: string;
   id: string;
   userId: string;
   role?: "owner" | "customer" | null;
   expiresInHours: number;
 }) => {
-  const order = await prisma.order.findUnique({ where: { id } });
+  const order = await prisma.order.findFirst({ where: { id, cafeId } });
 
   if (!order) {
     throw notFound("Order not found");
@@ -266,16 +283,16 @@ export const createGuestToken = async ({
 
   const guestToken = await prisma.guestOrderToken.upsert({
     where: { orderId: id },
-    update: { token, expiresAt },
-    create: { orderId: id, token, expiresAt },
+    update: { token, expiresAt, cafeId },
+    create: { orderId: id, token, expiresAt, cafeId },
   });
 
   return { token: guestToken.token, expiresAt };
 };
 
-export const getOrderByGuestToken = async (token: string) => {
-  const guestToken = await prisma.guestOrderToken.findUnique({
-    where: { token },
+export const getOrderByGuestToken = async (cafeId: string, token: string) => {
+  const guestToken = await prisma.guestOrderToken.findFirst({
+    where: { token, cafeId },
     include: { order: { include: { items: true } } },
   });
 

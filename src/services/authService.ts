@@ -22,10 +22,12 @@ export const registerUser = async ({
   email,
   password,
   name,
+  phone,
 }: {
   email: string;
   password: string;
   name: string | null;
+  phone: string;
 }): Promise<AuthSession> => {
   const existing = await prisma.user.findUnique({
     where: { email },
@@ -44,6 +46,7 @@ export const registerUser = async ({
       name: safeName,
       passwordHash,
       role: "customer",
+      phone,
     },
     select: {
       id: true,

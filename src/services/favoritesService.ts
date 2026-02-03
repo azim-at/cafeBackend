@@ -1,9 +1,9 @@
 import { prisma } from "../config/prisma";
 import { badRequest } from "../utils/errors";
 
-export const listFavorites = async (userId: string) => {
+export const listFavorites = async (userId: string, cafeId: string) => {
   return prisma.favorite.findMany({
-    where: { userId },
+    where: { userId, cafeId },
     include: { menuItem: { include: { category: true } } },
     orderBy: { createdAt: "desc" },
   });
@@ -11,13 +11,15 @@ export const listFavorites = async (userId: string) => {
 
 export const createFavorite = async ({
   userId,
+  cafeId,
   menuItemId,
 }: {
   userId: string;
+  cafeId: string;
   menuItemId: string;
 }) => {
-  const menuItem = await prisma.menuItem.findUnique({
-    where: { id: menuItemId },
+  const menuItem = await prisma.menuItem.findFirst({
+    where: { id: menuItemId, cafeId },
     select: { id: true },
   });
 
@@ -27,7 +29,7 @@ export const createFavorite = async ({
 
   try {
     const favorite = await prisma.favorite.create({
-      data: { userId, menuItemId },
+      data: { userId, cafeId, menuItemId },
     });
     return { favorite, created: true };
   } catch (error: any) {
@@ -40,15 +42,17 @@ export const createFavorite = async ({
 
 export const removeFavorite = async ({
   userId,
+  cafeId,
   menuItemId,
 }: {
   userId: string;
+  cafeId: string;
   menuItemId: string;
 }) => {
   try {
     await prisma.favorite.delete({
       where: {
-        userId_menuItemId: { userId, menuItemId },
+        userId_cafeId_menuItemId: { userId, cafeId, menuItemId },
       },
     });
   } catch (error: any) {
