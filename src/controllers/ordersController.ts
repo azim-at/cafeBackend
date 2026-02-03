@@ -71,6 +71,7 @@ export const createGuestUserOrder = asyncHandler(
     const guestEmail = parseString(req.body.guestEmail);
     const guestPhone = parseString(req.body.guestPhone);
     const items = normalizeItemsInput(req.body.items);
+    
 
     if (!type || !items) {
       throw badRequest("Type and items are required");

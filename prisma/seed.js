@@ -104,6 +104,8 @@ async function main() {
     categoryId: coffee.id,
     price: 300,
     description: "Rich single-shot espresso.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=800&q=80",
     popular: true,
   });
 
@@ -112,6 +114,8 @@ async function main() {
     categoryId: coffee.id,
     price: 450,
     description: "Espresso with steamed milk.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=800&q=80",
     popular: true,
   });
 
@@ -120,6 +124,8 @@ async function main() {
     categoryId: coffee.id,
     price: 425,
     description: "Foamy espresso with milk.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=800&q=80",
   });
 
   const chai = await upsertMenuItem({
@@ -127,6 +133,8 @@ async function main() {
     categoryId: tea.id,
     price: 400,
     description: "Spiced tea with steamed milk.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=800&q=80",
   });
 
   const croissant = await upsertMenuItem({
@@ -134,6 +142,8 @@ async function main() {
     categoryId: pastries.id,
     price: 350,
     description: "Flaky butter croissant.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=800&q=80",
   });
 
   const muffin = await upsertMenuItem({
@@ -141,6 +151,8 @@ async function main() {
     categoryId: pastries.id,
     price: 325,
     description: "Fresh baked muffin.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=800&q=80",
   });
 
   await prisma.favorite.upsert({
