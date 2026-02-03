@@ -13,4 +13,4 @@ router.get("/dashboard/summary", requireAuth, requireOwner, getDashboardSummaryH
 router.get("/orders", requireAuth, requireOwner, listAdminOrdersHandler);
 router.patch("/orders/:id/decision", requireAuth, requireOwner, decideOrderHandler);
 
-export default router;
+export default router;  
