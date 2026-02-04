@@ -11,16 +11,18 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   const password = typeof req.body.password === "string" ? req.body.password : "";
   const name =
     typeof req.body.name === "string" ? req.body.name.trim() : null;
+  const phone =
+    typeof req.body.phone === "string" ? req.body.phone.trim() : "";
 
-  if (!email || !password) {
-    throw badRequest("Email and password are required");
+  if (!email || !password || !phone) {
+    throw badRequest("Email, password, and phone are required");
   }
 
   if (password.length < 8) {
     throw badRequest("Password must be at least 8 characters");
   }
 
-  const session = await registerUser({ email, password, name });
+  const session = await registerUser({ email, password, name, phone });
   res.status(201).json(session);
 });
 

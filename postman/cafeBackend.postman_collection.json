@@ -13,8 +13,12 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/health",
-              "host": ["{{baseUrl}}"],
-              "path": ["health"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
             }
           }
         }
@@ -28,17 +32,29 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"customer@cafe.local\",\n  \"password\": \"Customer123!\",\n  \"name\": \"Cafe Customer\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "raw": "{\n  \"email\": \"customer@cafe.local\",\n  \"password\": \"Customer123!\",\n  \"name\": \"Cafe Customer\",\n  \"phone\": \"555-0102\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/auth/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "register"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
             }
           },
           "event": [
@@ -62,17 +78,29 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"customer@cafe.local\",\n  \"password\": \"Customer123!\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
               "raw": "{{baseUrl}}/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             }
           },
           "event": [
@@ -96,14 +124,68 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/auth/logout",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "logout"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
             }
           }
+        },
+        {
+          "name": "POST /auth/login (owner)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner@cafe.local\",\n  \"password\": \"OwnerPass123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 400) {",
+                  "  var data = pm.response.json();",
+                  "  if (data && data.token) { pm.collectionVariables.set('ownerToken', data.token); }",
+                  "  if (data && data.user && data.user.id) { pm.collectionVariables.set('ownerUserId', data.user.id); }",
+                  "}"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -115,10 +197,21 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/menu/categories?includeItems=true",
-              "host": ["{{baseUrl}}"],
-              "path": ["menu", "categories"],
-              "query": [{ "key": "includeItems", "value": "true" }]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/menu/categories?includeItems=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "menu",
+                "categories"
+              ],
+              "query": [
+                {
+                  "key": "includeItems",
+                  "value": "true"
+                }
+              ]
             }
           }
         },
@@ -127,18 +220,34 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Coffee\",\n  \"sortOrder\": 1\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/menu/categories",
-              "host": ["{{baseUrl}}"],
-              "path": ["menu", "categories"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/menu/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "menu",
+                "categories"
+              ]
             }
           },
           "event": [
@@ -161,18 +270,35 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Coffee & Espresso\",\n  \"sortOrder\": 1\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/menu/categories/{{categoryId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["menu", "categories", "{{categoryId}}"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/menu/categories/{{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "menu",
+                "categories",
+                "{{categoryId}}"
+              ]
             }
           }
         },
@@ -181,12 +307,22 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              }
             ],
             "url": {
-              "raw": "{{baseUrl}}/menu/categories/{{categoryId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["menu", "categories", "{{categoryId}}"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/menu/categories/{{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "menu",
+                "categories",
+                "{{categoryId}}"
+              ]
             }
           }
         },
@@ -195,10 +331,21 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/menu/items?includeCategory=true",
-              "host": ["{{baseUrl}}"],
-              "path": ["menu", "items"],
-              "query": [{ "key": "includeCategory", "value": "true" }]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/menu/items?includeCategory=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "menu",
+                "items"
+              ],
+              "query": [
+                {
+                  "key": "includeCategory",
+                  "value": "true"
+                }
+              ]
             }
           }
         },
@@ -207,9 +354,16 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/menu/items/{{itemId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["menu", "items", "{{itemId}}"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/menu/items/{{itemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "menu",
+                "items",
+                "{{itemId}}"
+              ]
             }
           }
         },
@@ -218,18 +372,34 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Espresso\",\n  \"description\": \"Rich single-shot espresso.\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"price\": 300,\n  \"popular\": true,\n  \"isActive\": true\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/menu/items",
-              "host": ["{{baseUrl}}"],
-              "path": ["menu", "items"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/menu/items",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "menu",
+                "items"
+              ]
             }
           },
           "event": [
@@ -252,18 +422,35 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"price\": 325,\n  \"popular\": true\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/menu/items/{{itemId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["menu", "items", "{{itemId}}"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/menu/items/{{itemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "menu",
+                "items",
+                "{{itemId}}"
+              ]
             }
           }
         },
@@ -272,12 +459,22 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              }
             ],
             "url": {
-              "raw": "{{baseUrl}}/menu/items/{{itemId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["menu", "items", "{{itemId}}"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/menu/items/{{itemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "menu",
+                "items",
+                "{{itemId}}"
+              ]
             }
           }
         }
@@ -291,18 +488,33 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"type\": \"dine_in\",\n  \"items\": [\n    { \"menuItemId\": \"{{itemId}}\", \"quantity\": 1 }\n  ]\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/orders",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "orders"
+              ]
             }
           },
           "event": [
@@ -325,17 +537,30 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"type\": \"delivery\",\n  \"guestEmail\": \"guest@cafe.local\",\n  \"deliveryAddress\": \"123 Cafe Street\",\n  \"items\": [\n    { \"menuItemId\": \"{{itemId}}\", \"quantity\": 1 }\n  ]\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/orders/guest",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders", "guest"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/orders/guest",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "orders",
+                "guest"
+              ]
             }
           },
           "event": [
@@ -359,12 +584,20 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
-              "raw": "{{baseUrl}}/orders",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "orders"
+              ]
             }
           }
         },
@@ -373,12 +606,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
-              "raw": "{{baseUrl}}/orders/{{orderId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders", "{{orderId}}"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "orders",
+                "{{orderId}}"
+              ]
             }
           }
         },
@@ -387,18 +629,35 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"preparing\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/orders/{{orderId}}/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders", "{{orderId}}", "status"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
             }
           }
         },
@@ -407,18 +666,35 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"expiresInHours\": 24\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/orders/{{orderId}}/guest-token",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders", "{{orderId}}", "guest-token"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/orders/{{orderId}}/guest-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "orders",
+                "{{orderId}}",
+                "guest-token"
+              ]
             }
           },
           "event": [
@@ -441,9 +717,16 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/orders/guest/{{guestToken}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders", "guest", "{{guestToken}}"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/orders/guest/{{guestToken}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "orders",
+                "guest",
+                "{{guestToken}}"
+              ]
             }
           }
         }
@@ -457,12 +740,20 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
-              "raw": "{{baseUrl}}/favorites",
-              "host": ["{{baseUrl}}"],
-              "path": ["favorites"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/favorites",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "favorites"
+              ]
             }
           }
         },
@@ -471,18 +762,33 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"menuItemId\": \"{{menuItemId}}\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/favorites",
-              "host": ["{{baseUrl}}"],
-              "path": ["favorites"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/favorites",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "favorites"
+              ]
             }
           }
         },
@@ -491,12 +797,21 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
-              "raw": "{{baseUrl}}/favorites/{{menuItemId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["favorites", "{{menuItemId}}"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/favorites/{{menuItemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "favorites",
+                "{{menuItemId}}"
+              ]
             }
           }
         }
@@ -510,12 +825,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
-              "raw": "{{baseUrl}}/rewards/account",
-              "host": ["{{baseUrl}}"],
-              "path": ["rewards", "account"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/rewards/account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "rewards",
+                "account"
+              ]
             }
           }
         },
@@ -524,12 +848,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
-              "raw": "{{baseUrl}}/rewards/transactions",
-              "host": ["{{baseUrl}}"],
-              "path": ["rewards", "transactions"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/rewards/transactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "rewards",
+                "transactions"
+              ]
             }
           }
         },
@@ -538,18 +871,167 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"pointsDelta\": 10,\n  \"reason\": \"Manual adjustment\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
             "url": {
-              "raw": "{{baseUrl}}/rewards/transactions",
-              "host": ["{{baseUrl}}"],
-              "path": ["rewards", "transactions"]
+              "raw": "{{baseUrl}}/{{cafeSlug}}/rewards/transactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "rewards",
+                "transactions"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "GET /admin/dashboard/summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{cafeSlug}}/admin/dashboard/summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "admin",
+                "dashboard",
+                "summary"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /admin/orders (active)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{cafeSlug}}/admin/orders?status=active&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "admin",
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "active"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /admin/orders (range)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/{{cafeSlug}}/admin/orders?limit=20&range=today,yesterday",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "admin",
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "range",
+                  "value": "today,yesterday"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "PATCH /admin/orders/:id/decision",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ownerToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"accept\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/{{cafeSlug}}/admin/orders/{{orderId}}/decision",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "{{cafeSlug}}",
+                "admin",
+                "orders",
+                "{{orderId}}",
+                "decision"
+              ]
             }
           }
         }
@@ -557,14 +1039,53 @@
     }
   ],
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:4000/api" },
-    { "key": "token", "value": "" },
-    { "key": "userId", "value": "" },
-    { "key": "categoryId", "value": "" },
-    { "key": "itemId", "value": "" },
-    { "key": "menuItemId", "value": "" },
-    { "key": "orderId", "value": "" },
-    { "key": "guestOrderId", "value": "" },
-    { "key": "guestToken", "value": "" }
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000/api"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "categoryId",
+      "value": ""
+    },
+    {
+      "key": "itemId",
+      "value": ""
+    },
+    {
+      "key": "menuItemId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "guestOrderId",
+      "value": ""
+    },
+    {
+      "key": "guestToken",
+      "value": ""
+    },
+    {
+      "key": "cafeSlug",
+      "value": "cafe-central"
+    },
+    {
+      "key": "ownerToken",
+      "value": ""
+    },
+    {
+      "key": "ownerUserId",
+      "value": ""
+    }
   ]
 }

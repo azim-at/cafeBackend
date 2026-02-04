@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { badRequest, forbidden } from "../utils/errors";
 import { parseIntValue, parseString } from "../utils/parsers";
+import { getCafeScopedRole, requireCafeId } from "../utils/tenancy";
 import { ORDER_STATUSES_SET, ORDER_TYPES_SET } from "../constants/orders";
 import {
   createGuestOrder,
@@ -41,6 +42,7 @@ const normalizeItemsInput = (items: unknown): OrderItemInput[] | null => {
 
 export const createUserOrder = asyncHandler(
   async (req: Request, res: Response) => {
+    const cafeId = requireCafeId(req);
     const type = parseString(req.body.type);
     const deliveryAddress = parseString(req.body.deliveryAddress);
     const items = normalizeItemsInput(req.body.items);
@@ -54,6 +56,7 @@ export const createUserOrder = asyncHandler(
     }
 
     const order = await createOrder({
+      cafeId,
       userId: req.user!.id,
       type,
       deliveryAddress,
@@ -66,6 +69,7 @@ export const createUserOrder = asyncHandler(
 
 export const createGuestUserOrder = asyncHandler(
   async (req: Request, res: Response) => {
+    const cafeId = requireCafeId(req);
     const type = parseString(req.body.type);
     const deliveryAddress = parseString(req.body.deliveryAddress);
     const guestEmail = parseString(req.body.guestEmail);
@@ -82,6 +86,7 @@ export const createGuestUserOrder = asyncHandler(
     }
 
     const result = await createGuestOrder({
+      cafeId,
       type,
       deliveryAddress,
       guestEmail,
@@ -95,16 +100,19 @@ export const createGuestUserOrder = asyncHandler(
 
 export const listUserOrders = asyncHandler(
   async (req: Request, res: Response) => {
+    const cafeId = requireCafeId(req);
     const status = parseString(req.query.status) ?? undefined;
     const userIdQuery = parseString(req.query.userId) ?? undefined;
+    const role = getCafeScopedRole(req);
 
     if (status && !ORDER_STATUSES_SET.has(status)) {
       throw badRequest("Invalid status");
     }
 
     const orders = await listOrders({
+      cafeId,
       userId: req.user!.id,
-      role: req.user?.role,
+      role,
       status,
       userIdQuery,
     });
@@ -115,14 +123,17 @@ export const listUserOrders = asyncHandler(
 
 export const getUserOrder = asyncHandler(
   async (req: Request, res: Response) => {
+    const cafeId = requireCafeId(req);
     const id = parseString(req.params.id);
     if (!id) {
       throw badRequest("Invalid order id");
     }
+    const role = getCafeScopedRole(req);
     const order = await getOrder({
+      cafeId,
       id,
       userId: req.user!.id,
-      role: req.user?.role,
+      role,
     });
 
     res.status(200).json({ order });
@@ -131,7 +142,9 @@ export const getUserOrder = asyncHandler(
 
 export const updateOrderStatusHandler = asyncHandler(
   async (req: Request, res: Response) => {
-    if (req.user?.role !== "owner") {
+    const cafeId = requireCafeId(req);
+    const role = getCafeScopedRole(req);
+    if (role !== "owner") {
       throw forbidden("Forbidden");
     }
 
@@ -161,12 +174,13 @@ export const updateOrderStatusHandler = asyncHandler(
     }
 
     const order = await updateOrderStatus({
+      cafeId,
       id,
       status,
       estimatedReadyAt,
       cancelledReason,
       deliveryFee,
-      role: req.user?.role,
+      role,
     });
 
     res.status(200).json({ order });
@@ -175,16 +189,19 @@ export const updateOrderStatusHandler = asyncHandler(
 
 export const createGuestTokenHandler = asyncHandler(
   async (req: Request, res: Response) => {
+    const cafeId = requireCafeId(req);
     const id = parseString(req.params.id);
     if (!id) {
       throw badRequest("Invalid order id");
     }
     const expiresInHours = parseIntValue(req.body.expiresInHours) ?? 24;
+    const role = getCafeScopedRole(req);
 
     const result = await createGuestToken({
+      cafeId,
       id,
       userId: req.user!.id,
-      role: req.user?.role,
+      role,
       expiresInHours,
     });
 
@@ -194,11 +211,12 @@ export const createGuestTokenHandler = asyncHandler(
 
 export const getGuestOrder = asyncHandler(
   async (req: Request, res: Response) => {
+    const cafeId = requireCafeId(req);
     const token = parseString(req.params.token);
     if (!token) {
       throw badRequest("Invalid token");
     }
-    const order = await getOrderByGuestToken(token);
+    const order = await getOrderByGuestToken(cafeId, token);
     res.status(200).json({ order });
   }
 );

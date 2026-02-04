@@ -6,7 +6,7 @@ import {
 } from "../controllers/favoritesController";
 import { requireAuth } from "../middleware/requireAuth";
 
-const router = Router();
+const router = Router({ mergeParams: true });
 
 router.get("/", requireAuth, listUserFavorites);
 router.post("/", requireAuth, createUserFavorite);

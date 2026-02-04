@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { badRequest } from "../utils/errors";
 import { parseBoolean, parseIntValue, parseString } from "../utils/parsers";
+import { requireCafeId } from "../utils/tenancy";
 import {
   createCategory,
   createItem,
@@ -16,14 +17,16 @@ import {
 
 export const listMenuCategories = asyncHandler(
   async (req: Request, res: Response) => {
+    const cafeId = requireCafeId(req);
     const includeItems = parseBoolean(req.query.includeItems) ?? false;
-    const categories = await listCategories(includeItems);
+    const categories = await listCategories(cafeId, includeItems);
     res.status(200).json({ categories });
   }
 );
 
 export const createMenuCategory = asyncHandler(
   async (req: Request, res: Response) => {
+    const cafeId = requireCafeId(req);
     const name =
       typeof req.body.name === "string" ? req.body.name.trim() : "";
     const sortOrderInput = req.body.sortOrder;
@@ -38,13 +41,14 @@ export const createMenuCategory = asyncHandler(
       throw badRequest("Name is required");
     }
 
-    const category = await createCategory({ name, sortOrder });
+    const category = await createCategory({ cafeId, name, sortOrder });
     res.status(201).json({ category });
   }
 );
 
 export const updateMenuCategory = asyncHandler(
   async (req: Request, res: Response) => {
+    const cafeId = requireCafeId(req);
     const id = parseString(req.params.id);
     if (!id) {
       throw badRequest("Invalid category id");
@@ -63,6 +67,7 @@ export const updateMenuCategory = asyncHandler(
     }
 
     const category = await updateCategory({
+      cafeId,
       id,
       ...(name !== undefined ? { name } : {}),
       ...(sortOrder !== null ? { sortOrder } : {}),
@@ -74,22 +79,25 @@ export const updateMenuCategory = asyncHandler(
 
 export const deleteMenuCategory = asyncHandler(
   async (req: Request, res: Response) => {
+    const cafeId = requireCafeId(req);
     const id = parseString(req.params.id);
     if (!id) {
       throw badRequest("Invalid category id");
     }
-    await deleteCategory(id);
+    await deleteCategory({ id, cafeId });
     res.status(200).json({ success: true });
   }
 );
 
 export const listMenuItems = asyncHandler(
   async (req: Request, res: Response) => {
+    const cafeId = requireCafeId(req);
     const categoryId = parseString(req.query.categoryId) ?? undefined;
     const includeInactive = parseBoolean(req.query.includeInactive) ?? false;
     const includeCategory = parseBoolean(req.query.includeCategory) ?? false;
 
     const items = await listItems({
+      cafeId,
       categoryId,
       includeInactive,
       includeCategory,
@@ -101,17 +109,19 @@ export const listMenuItems = asyncHandler(
 
 export const getMenuItem = asyncHandler(
   async (req: Request, res: Response) => {
+    const cafeId = requireCafeId(req);
     const id = parseString(req.params.id);
     if (!id) {
       throw badRequest("Invalid item id");
     }
-    const item = await getItem(id);
+    const item = await getItem({ id, cafeId });
     res.status(200).json({ item });
   }
 );
 
 export const createMenuItem = asyncHandler(
   async (req: Request, res: Response) => {
+    const cafeId = requireCafeId(req);
     const name =
       typeof req.body.name === "string" ? req.body.name.trim() : "";
     const description =
@@ -142,6 +152,7 @@ export const createMenuItem = asyncHandler(
     }
 
     const item = await createItem({
+      cafeId,
       name,
       description,
       categoryId,
@@ -158,6 +169,7 @@ export const createMenuItem = asyncHandler(
 
 export const updateMenuItem = asyncHandler(
   async (req: Request, res: Response) => {
+    const cafeId = requireCafeId(req);
     const id = parseString(req.params.id);
     if (!id) {
       throw badRequest("Invalid item id");
@@ -219,6 +231,7 @@ export const updateMenuItem = asyncHandler(
     }
 
     const item = await updateItem({
+      cafeId,
       id,
       updates: updates as {
         name?: string;
@@ -238,11 +251,12 @@ export const updateMenuItem = asyncHandler(
 
 export const deleteMenuItem = asyncHandler(
   async (req: Request, res: Response) => {
+    const cafeId = requireCafeId(req);
     const id = parseString(req.params.id);
     if (!id) {
       throw badRequest("Invalid item id");
     }
-    await deleteItem(id);
+    await deleteItem({ id, cafeId });
     res.status(200).json({ success: true });
   }
 );

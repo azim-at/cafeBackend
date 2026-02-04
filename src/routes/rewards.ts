@@ -7,7 +7,7 @@ import {
 } from "../controllers/rewardsController";
 import { requireAuth } from "../middleware/requireAuth";
 
-const router = Router();
+const router = Router({ mergeParams: true });
 
 router.get("/account", requireAuth, getAccount);
 router.get("/transactions", requireAuth, listTransactions);

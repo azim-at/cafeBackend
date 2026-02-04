@@ -1,13 +1,14 @@
 import { prisma } from "../config/prisma";
 import { badRequest, conflict, notFound } from "../utils/errors";
 
-export const listCategories = async (includeItems: boolean) => {
+export const listCategories = async (cafeId: string, includeItems: boolean) => {
   return prisma.menuCategory.findMany({
+    where: { cafeId },
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     include: includeItems
       ? {
           items: {
-            where: { isActive: true },
+            where: { isActive: true, cafeId },
             orderBy: [{ name: "asc" }],
           },
         }
@@ -16,26 +17,30 @@ export const listCategories = async (includeItems: boolean) => {
 };
 
 export const createCategory = async ({
+  cafeId,
   name,
   sortOrder,
 }: {
+  cafeId: string;
   name: string;
   sortOrder: number;
 }) => {
-  return prisma.menuCategory.create({ data: { name, sortOrder } });
+  return prisma.menuCategory.create({ data: { cafeId, name, sortOrder } });
 };
 
 export const updateCategory = async ({
+  cafeId,
   id,
   name,
   sortOrder,
 }: {
+  cafeId: string;
   id: string;
   name?: string;
   sortOrder?: number;
 }) => {
-  const existing = await prisma.menuCategory.findUnique({
-    where: { id },
+  const existing = await prisma.menuCategory.findFirst({
+    where: { id, cafeId },
     select: { id: true },
   });
 
@@ -52,9 +57,15 @@ export const updateCategory = async ({
   });
 };
 
-export const deleteCategory = async (id: string) => {
-  const existing = await prisma.menuCategory.findUnique({
-    where: { id },
+export const deleteCategory = async ({
+  id,
+  cafeId,
+}: {
+  id: string;
+  cafeId: string;
+}) => {
+  const existing = await prisma.menuCategory.findFirst({
+    where: { id, cafeId },
     select: { id: true },
   });
 
@@ -63,7 +74,7 @@ export const deleteCategory = async (id: string) => {
   }
 
   const itemsCount = await prisma.menuItem.count({
-    where: { categoryId: id },
+    where: { categoryId: id, cafeId },
   });
 
   if (itemsCount > 0) {
@@ -74,15 +85,18 @@ export const deleteCategory = async (id: string) => {
 };
 
 export const listItems = async ({
+  cafeId,
   categoryId,
   includeInactive,
   includeCategory,
 }: {
+  cafeId: string;
   categoryId?: string;
   includeInactive: boolean;
   includeCategory: boolean;
 }) => {
   const where = {
+    cafeId,
     ...(categoryId ? { categoryId } : {}),
     ...(includeInactive ? {} : { isActive: true }),
   };
@@ -94,9 +108,9 @@ export const listItems = async ({
   });
 };
 
-export const getItem = async (id: string) => {
-  const item = await prisma.menuItem.findUnique({
-    where: { id },
+export const getItem = async ({ id, cafeId }: { id: string; cafeId: string }) => {
+  const item = await prisma.menuItem.findFirst({
+    where: { id, cafeId },
     include: { category: true },
   });
 
@@ -108,6 +122,7 @@ export const getItem = async (id: string) => {
 };
 
 export const createItem = async ({
+  cafeId,
   name,
   description,
   categoryId,
@@ -117,6 +132,7 @@ export const createItem = async ({
   isActive,
   imageUrl,
 }: {
+  cafeId: string;
   name: string;
   description?: string;
   categoryId: string;
@@ -126,8 +142,8 @@ export const createItem = async ({
   isActive: boolean;
   imageUrl?: string;
 }) => {
-  const category = await prisma.menuCategory.findUnique({
-    where: { id: categoryId },
+  const category = await prisma.menuCategory.findFirst({
+    where: { id: categoryId, cafeId },
     select: { id: true },
   });
 
@@ -137,6 +153,7 @@ export const createItem = async ({
 
   return prisma.menuItem.create({
     data: {
+      cafeId,
       name,
       description,
       categoryId,
@@ -150,9 +167,11 @@ export const createItem = async ({
 };
 
 export const updateItem = async ({
+  cafeId,
   id,
   updates,
 }: {
+  cafeId: string;
   id: string;
   updates: {
     name?: string;
@@ -165,8 +184,8 @@ export const updateItem = async ({
     imageUrl?: string;
   };
 }) => {
-  const existing = await prisma.menuItem.findUnique({
-    where: { id },
+  const existing = await prisma.menuItem.findFirst({
+    where: { id, cafeId },
     select: { id: true },
   });
 
@@ -175,8 +194,8 @@ export const updateItem = async ({
   }
 
   if (updates.categoryId) {
-    const category = await prisma.menuCategory.findUnique({
-      where: { id: updates.categoryId },
+    const category = await prisma.menuCategory.findFirst({
+      where: { id: updates.categoryId, cafeId },
       select: { id: true },
     });
     if (!category) {
@@ -190,9 +209,9 @@ export const updateItem = async ({
   });
 };
 
-export const deleteItem = async (id: string) => {
-  const existing = await prisma.menuItem.findUnique({
-    where: { id },
+export const deleteItem = async ({ id, cafeId }: { id: string; cafeId: string }) => {
+  const existing = await prisma.menuItem.findFirst({
+    where: { id, cafeId },
     select: { id: true },
   });
 
@@ -201,13 +220,13 @@ export const deleteItem = async (id: string) => {
   }
 
   const orderItemsCount = await prisma.orderItem.count({
-    where: { menuItemId: id },
+    where: { menuItemId: id, cafeId },
   });
 
   if (orderItemsCount > 0) {
     throw conflict("Item has order history and cannot be removed");
   }
 
-  await prisma.favorite.deleteMany({ where: { menuItemId: id } });
+  await prisma.favorite.deleteMany({ where: { menuItemId: id, cafeId } });
   await prisma.menuItem.delete({ where: { id } });
 };
